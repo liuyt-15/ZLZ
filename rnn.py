@@ -31,15 +31,16 @@ import matplotlib.plot as plt
 import matplotlib
 
 
-def build_model():
+def build_model(data):
     model = Sequential()
-    model.add(LSTM(5, 300, return_sequences=True))
-    model.add(LSTM(300, 500, return_sequences=True))
+    model.add(LSTM(50, input_shape =(data.shape[1],data.shape[2]), return_sequences=True))
+    model.add(LSTM(100,return_sequences=True))
     model.add(Dropout(0.2))
-    model.add(LSTM(500, 200, return_sequences=False))
+    model.add(LSTM(30,return_sequences=False))
     model.add(Dropout(0.2))
-    model.add(Dense(200, 3))
-    model.add(Activation("linear")) model.compile(loss="mean_squared_error", optimizer="rmsprop")
+    model.add(Dense(data.shape[2], 3))
+    model.add(Activation("linear"))
+
     return model
 
 def get_feature(model, layer_num,input):
@@ -71,7 +72,7 @@ def train_rnn_model(model, train_data, train_label,weight_path):
     checkpointers = ModelCheckpoint(filepath=weight_path +'weight.{epoch:02d}-{acc:.4f}.hdf5',
                                     monitor='val_acc', save_best_only=False, mode='auto')
     stopping = Stopping(threshold=0.98, epoches=400)
-    model.compile(loss='categorical_crossentropy', optimizer='RMSprop', metrics=["accuracy"])
+    model.compile(loss="mean_squared_error", optimizer="rmsprop")
     model.fit(train_data, train_label, nb_epoch= 1000, batch_size=128,  shuffle=True, callbacks= [checkpointers,stopping])
 
 def test_rnn_model(model, test_data, test_label, weight_path):
