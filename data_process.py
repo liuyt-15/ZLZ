@@ -34,12 +34,36 @@ def load_data(data_path):
                     max_time = time
     return data_dict_list,min_time, max_time
 
-def get_one_to_text(start_time, end_time, data_dict_list, input_key=None):
+def load_full_data(data_path, type_text):
+    """full数据处理
+    """
+    data_dict_list = list()
+    min_time, max_time = float("inf"), 0
+    true = 'true'   #使eval()正常运行
+    null = 'null'
+    with open(data_path, 'rb') as data_file:
+        for line in data_file:
+            line_dict = eval(line.strip())
+            if 'deleted' in line_dict or line_dict['type'] != type_text: #过滤已删除的数据
+                pass
+            else:
+                data_dict_list.append(line_dict)
+#                print line_dict
+                if 'time' in line_dict:
+                    time = int(line_dict['time'])
+                    if time < min_time:
+                        min_time = time
+                    if time > max_time:
+                        max_time = time
+    return data_dict_list,min_time, max_time
+    
+def get_one_to_text(start_time, end_time, data_dict_list, output_value, input_key=None):
     """得到属性（id或auther）与text的对应关系
     Args：
         start_time：开始的时间戳
         end_time： 结束的时间戳
         data_dict_list: 包含所有属性的数据列表
+        output_value: 'title'--poll,'text'-- 其他
         input_key: 'id', 'author'等，默认为'id'
     Returns:
          one_to_text: [['102', 'Why target people specifically?'], ....]       
@@ -52,14 +76,19 @@ def get_one_to_text(start_time, end_time, data_dict_list, input_key=None):
         if time < start_time or time > end_time:
             pass
         else:
-            one_to_text.append([line_dict[input_key], line_dict['text']])
+            one_to_text.append([line_dict[input_key], line_dict[output_value]])
     return one_to_text
-                
-    
+
 if __name__=='__main__':
-    data_path = os.path.join('data', 'comments_000000000000')
-    data_dict_list, min_time, max_time = load_data(data_path)
-    time_span = max_time - min_time
-    one_to_text = get_one_to_text(min_time, min_time + time_span / 5, data_dict_list, input_key=None)    
-    pickle.dump(one_to_text, open('id_to_text.pklb', 'wb'), True)
+    
+#    data_path = os.path.join('data', 'comments_000000000000')
+#    data_dict_list, min_time, max_time = load_data(data_path)
+#    time_span = max_time - min_time
+#    one_to_text = get_one_to_text(min_time, min_time + time_span / 5, data_dict_list, 'text', input_key=None)    
+#    pickle.dump(one_to_text, open('id_to_text.pklb', 'wb'), True)
 #    id_to_text = pickle.load(open(os.path.join('', 'id_to_text.pklb'), 'rb'))
+    
+    full_data_path = os.path.join('data', 'full_201510_000000000000')
+    data_dict_list, min_time, max_time = load_full_data(full_data_path, 'poll')
+    one_to_title = get_one_to_text(min_time, max_time, data_dict_list, 'title',input_key=None)
+    pickle.dump(data_dict_list, open('poll_id_to_text.pklb', 'wb'), True)
